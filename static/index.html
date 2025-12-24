@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Marketing Strategy Generator</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f7fafc; color:#0f172a; margin:0; }
+    .card { max-width:900px; margin:32px auto; background:white; border-radius:12px; box-shadow:0 8px 30px rgba(15,23,42,0.08); padding:28px; }
+    h1 { margin:0 0 12px; font-size:22px; }
+    p { margin:0 0 10px; }
+    .controls { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+    button { background:#0f172a; color:white; padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600; }
+    button.secondary { background:white; color:#0f172a; border:1px solid #e2e8f0; }
+    .field { margin-bottom:14px; }
+    .step { display:none; }
+    .step.active { display:block; }
+    input[type="text"], input[type="number"], textarea, select { width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px; box-sizing:border-box; }
+    .chips { display:flex; gap:10px; flex-wrap:wrap; }
+    .chip { padding:8px 12px; border-radius:999px; border:1px solid #e2e8f0; cursor:pointer; user-select:none; }
+    .chip.selected { background:#e6f0ff; border-color:#bfdbfe; color:#0f172a; }
+    pre { background:#0f172a; color:#f8fafc; padding:14px; border-radius:10px; overflow:auto; white-space:pre-wrap; }
+    .muted { color:#64748b; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Clique Strategist — Marketing Strategy Generator</h1>
+    <p class="muted">Select platforms, add a few insights, choose goal & duration, then generate an expert plan.</p>
+    <div id="wizard">
+      <!-- Step 1: Platforms -->
+      <div class="step active" data-step="1">
+        <p><strong>Step 1 — Platforms</strong></p>
+        <div class="chips" id="platformChips">
+          <div class="chip" data-platform="Instagram">Instagram</div>
+          <div class="chip" data-platform="Facebook">Facebook</div>
+          <div class="chip" data-platform="YouTube">YouTube</div>
+          <div class="chip" data-platform="LinkedIn">LinkedIn</div>
+          <div class="chip" data-platform="TikTok">TikTok</div>
+        </div>
+        <div class="controls"><button onclick="nextStep()">Next</button></div>
+      </div>
+
+      <!-- Step 2: Insights -->
+      <div class="step" data-step="2">
+        <p><strong>Step 2 — Basic insights (estimates ok)</strong></p>
+        <div class="field">
+          <label>Followers / Subscribers</label>
+          <input id="followers" type="text" placeholder="e.g. 4,500" />
+        </div>
+        <div class="field">
+          <label>Avg. reach / views per post</label>
+          <input id="avg_reach" type="text" placeholder="e.g. 3-5k reach" />
+        </div>
+        <div class="field">
+          <label>Engagement rate</label>
+          <input id="engagement" type="text" placeholder="e.g. ~2.5%" />
+        </div>
+        <div class="field">
+          <label>Audience / niche (optional)</label>
+          <input id="audience" type="text" placeholder="e.g. DTC skincare founders" />
+        </div>
+        <div class="controls">
+          <button class="secondary" onclick="prevStep()">Back</button>
+          <button onclick="nextStep()">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Goal & Duration -->
+      <div class="step" data-step="3">
+        <p><strong>Step 3 — Goal & Duration</strong></p>
+        <div class="field">
+          <label>Primary goal</label>
+          <select id="goal">
+            <option value="">Select a goal</option>
+            <option value="Grow followers">Grow followers</option>
+            <option value="Increase reach/views">Increase reach/views</option>
+            <option value="Drive qualified leads">Drive qualified leads</option>
+            <option value="Boost conversions / sales">Boost conversions / sales</option>
+            <option value="Brand awareness">Brand awareness</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Duration</label>
+          <select id="duration">
+            <option value="15">15 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="45">45 days</option>
+            <option value="60">60 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </div>
+        <div class="controls">
+          <button class="secondary" onclick="prevStep()">Back</button>
+          <button onclick="submitWizard()">Generate Strategy</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Result -->
+      <div class="step" data-step="4">
+        <p><strong>Strategy</strong></p>
+        <div id="resultArea" class="muted"><em>Waiting to generate…</em></div>
+        <div style="margin-top:14px" class="controls">
+          <button class="secondary" onclick="resetWizard()">Start Over</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
