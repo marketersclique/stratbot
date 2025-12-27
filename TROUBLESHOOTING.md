@@ -2,49 +2,53 @@
 
 ## Common Causes
 
-### 1. Missing AWS IAM Role Permissions (Most Common)
-The application uses **IAM Role-based authentication** (no static AWS keys needed).
+### 1. Missing OpenRouter API Key (Most Common)
+The application uses **OpenRouter API** for LLM inference.
 
-**For EC2/ECS/Lambda deployments:**
-- Ensure the IAM role attached to your instance/task/function has `bedrock:InvokeModel` permission
-- The role should have access to the Bedrock model you're using
-- Region must be set correctly
-
-**Optional environment variables (if not using IAM role):**
+**Required environment variable:**
 ```env
-AWS_REGION=us-east-1
-BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
-**Note:** If running locally and not using IAM roles, you can use AWS CLI credentials (`~/.aws/credentials`) or environment variables, but the code does NOT require explicit credential configuration.
+**Optional environment variables:**
+```env
+OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENROUTER_SITE_URL=https://your-site.com
+OPENROUTER_SITE_NAME=Your Site Name
+```
+
+**Note:** 
+- Get your API key from https://openrouter.ai
+- The default model is `openai/gpt-4o-mini` but you can use any model available on OpenRouter
+- Site URL and Site Name are optional and used for rankings on openrouter.ai
 
 ### 2. Missing Dependencies
-If you see `ModuleNotFoundError: No module named 'boto3'`, install dependencies:
+If you see `ModuleNotFoundError: No module named 'openai'`, install dependencies:
 
 ```bash
 cd /home/aryan/Work/strategy/app
 ./product/bin/python3 -m pip install -r requirements.txt
 ```
 
-### 3. IAM Role Permissions
-- Verify the IAM role has `bedrock:InvokeModel` permission
-- Ensure the role has access to the Bedrock model you're using
-- Check that the region is correct and Bedrock is enabled in that region
-- For local development, ensure AWS credentials are configured via `~/.aws/credentials` or environment variables
+### 3. Invalid OpenRouter API Key
+- Verify your API key is correct at https://openrouter.ai/keys
+- Ensure the API key has sufficient credits/balance
+- Check that the API key is not expired or revoked
 
-### 4. Bedrock Model Access
-- Verify the model ID is correct: `anthropic.claude-3-haiku-20240307-v1:0`
-- Ensure Bedrock is enabled in your AWS region
-- Check if you need to request model access in AWS Bedrock console
+### 4. Model Access Issues
+- Verify the model ID is correct (e.g., `openai/gpt-4o-mini`, `anthropic/claude-3-haiku`)
+- Check if the model requires special access on OpenRouter
+- Ensure your account has access to the selected model
 
 ### 5. Network/Connection Issues
 - Check your internet connection
-- Verify AWS service endpoints are accessible
+- Verify OpenRouter API endpoints are accessible (https://openrouter.ai/api/v1)
 - Check firewall/proxy settings
+- Ensure no rate limiting is blocking requests
 
 ## How to Check the Actual Error
 
-1. **Check server logs** - The uvicorn output will show the full traceback
+1. **Check server logs** - The uvicorn output will show the full traceback with detailed error messages
 2. **Check browser console** - Open DevTools (F12) and check the Network tab for error details
 3. **Test the endpoint directly**:
    ```bash
@@ -55,10 +59,21 @@ cd /home/aryan/Work/strategy/app
 
 ## Quick Fix Checklist
 
-- [ ] IAM role has `bedrock:InvokeModel` permission (for EC2/ECS/Lambda)
-- [ ] AWS credentials configured (for local development: `~/.aws/credentials` or env vars)
-- [ ] `boto3` and `botocore` are installed
-- [ ] `AWS_REGION` environment variable is set (or defaults to us-east-1)
-- [ ] Bedrock is enabled in your AWS account for the specified region
-- [ ] Model access is granted for Claude models in Bedrock console
+- [ ] `OPENROUTER_API_KEY` environment variable is set
+- [ ] OpenRouter API key is valid and has credits
+- [ ] `openai` package is installed (`pip install openai`)
+- [ ] `OPENROUTER_MODEL` is set to a valid model (or uses default)
+- [ ] Internet connection is working
+- [ ] No firewall blocking OpenRouter API access
+- [ ] Check server logs for detailed error messages
 
+## Environment Variables
+
+Create a `.env` file in the `app/` directory:
+
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENROUTER_SITE_URL=https://your-site.com
+OPENROUTER_SITE_NAME=Your Site Name
+```

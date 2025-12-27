@@ -5,5 +5,3 @@ httpx
 jinja2
 python-dotenv
 openai
-boto3
-botocore

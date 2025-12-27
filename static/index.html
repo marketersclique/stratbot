@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked.js for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
   <style>
     :root {
       --gradient-from: #FF6527;
@@ -109,17 +111,250 @@
     }
 
     .result-content {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 1.5rem;
-      border-radius: 0.625rem;
+      background: white;
+      color: #1f2937;
+      padding: 2rem;
+      border-radius: 0.75rem;
       overflow-x: auto;
-      white-space: pre-wrap;
+      line-height: 1.8;
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    /* Markdown styling */
+    .markdown-content {
+      font-family: var(--font-dm-sans);
+    }
+
+    .markdown-content h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #FF6527;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .markdown-content h1:first-child {
+      margin-top: 0;
+    }
+
+    .markdown-content h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #FF6527;
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .markdown-content h2::before {
+      content: "📋";
+      font-size: 1.25rem;
+    }
+
+    .markdown-content h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #f97316;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .markdown-content h3::before {
+      content: "📌";
+      font-size: 1rem;
+    }
+
+    .markdown-content h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fb923c;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .markdown-content p {
+      margin-bottom: 1rem;
+      color: #374151;
+      line-height: 1.8;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+    }
+
+    .markdown-content ul {
+      list-style: none;
+    }
+
+    .markdown-content ul li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #4b5563;
+      line-height: 1.7;
+    }
+
+    .markdown-content ul li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .markdown-content ol {
+      counter-reset: list-counter;
+      list-style: none;
+    }
+
+    .markdown-content ol li {
+      counter-increment: list-counter;
+      position: relative;
+      padding-left: 2rem;
+      margin-bottom: 0.75rem;
+      color: #4b5563;
+      line-height: 1.7;
+    }
+
+    .markdown-content ol li::before {
+      content: counter(list-counter) ".";
+      position: absolute;
+      left: 0;
+      color: #FF6527;
+      font-weight: 600;
+    }
+
+    .markdown-content strong {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .markdown-content em {
+      font-style: italic;
+      color: #6b7280;
+    }
+
+    .markdown-content code {
+      background: #f3f4f6;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      color: #dc2626;
+    }
+
+    .markdown-content pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
       font-family: 'Courier New', monospace;
       font-size: 0.875rem;
       line-height: 1.6;
-      max-height: 600px;
-      overflow-y: auto;
+    }
+
+    .markdown-content pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    .markdown-content blockquote {
+      border-left: 4px solid #FF6527;
+      padding-left: 1rem;
+      margin-left: 0;
+      margin-bottom: 1rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .markdown-content hr {
+      border: none;
+      border-top: 2px solid #e5e7eb;
+      margin: 2rem 0;
+    }
+
+    .markdown-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .markdown-content table th,
+    .markdown-content table td {
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    .markdown-content table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #FF6527;
+    }
+
+    .markdown-content a {
+      color: #FF6527;
+      text-decoration: underline;
+    }
+
+    .markdown-content a:hover {
+      color: #ea580c;
+    }
+
+    .markdown-content .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .markdown-content .task-item.checked {
+      opacity: 0.7;
+      text-decoration: line-through;
+    }
+
+    /* Improve spacing for nested lists */
+    .markdown-content ul ul,
+    .markdown-content ol ol,
+    .markdown-content ul ol,
+    .markdown-content ol ul {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Add subtle background for code blocks */
+    .markdown-content pre {
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+
+    /* Improve table styling */
+    .markdown-content table {
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .markdown-content table tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .markdown-content table tr:hover {
+      background: #f3f4f6;
     }
 
     .result-content::-webkit-scrollbar {

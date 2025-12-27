@@ -264,7 +264,8 @@ function showStep(stepNumber) {
     return;
   }
 
-  if (stepNumber === 4 && state.step !== 4) {
+  // Allow going to step 4 only if explicitly allowed (via flag) or already on step 4
+  if (stepNumber === 4 && state.step !== 4 && !state.allowStep4) {
     // Don't allow jumping to result step without submission
     return;
   }
@@ -445,69 +446,71 @@ async function submitWizard() {
     })(),
   };
 
-  // Log payload for debugging (remove in production)
+  // Log payload for debugging
   console.log("Submitting payload:", JSON.stringify(payload, null, 2));
 
+  // Allow navigation to step 4
+  state.allowStep4 = true;
+  
+  // Navigate to step 4 and show loading spinner
   showStep(4);
-  const area = document.getElementById("resultArea");
-  if (area) {
-    area.innerHTML = `
-      <div class="text-center py-12">
+  
+  // Show loading state in result area
+  const resultArea = document.getElementById("resultArea");
+  if (resultArea) {
+    resultArea.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
         <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-lg text-gray-600">Generating your personalized strategy...</p>
-        <p class="text-sm text-gray-500 mt-2">This may take a few moments</p>
+        <p class="text-lg">Generating your strategy...</p>
+        <p class="text-sm mt-2 text-gray-400">This may take 30-60 seconds</p>
       </div>
     `;
   }
 
   try {
-    const response = await fetch("/generate-strategy", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    // Call the FastAPI endpoint
+    const response = await fetch('/generate-strategy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      let errorMessage = "Request failed";
-      try {
-        const errorData = await response.json();
-        // Handle 422 validation errors with detailed messages
-        if (response.status === 422 && errorData.detail) {
-          const validationErrors = Array.isArray(errorData.detail) 
-            ? errorData.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join('; ')
-            : JSON.stringify(errorData.detail);
-          errorMessage = `Validation error: ${validationErrors}`;
-          console.error("Validation errors:", errorData);
-        } else if (errorData.detail) {
-          errorMessage = errorData.detail;
-        }
-      } catch (e) {
-        const errText = await response.text();
-        errorMessage = errText || errorMessage;
-      }
-      throw new Error(errorMessage);
+      // Handle HTTP errors
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
     }
 
+    // Parse successful response
     const data = await response.json();
+    
+    // Render the strategy result
     renderResult(data);
-  } catch (err) {
-    if (area) {
-      area.innerHTML = `
-        <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-          <div class="flex items-center">
-            <div class="text-red-500 text-xl mr-3">⚠️</div>
-            <div>
-              <h3 class="text-red-800 font-semibold mb-1">Error generating strategy</h3>
-              <p class="text-red-600 text-sm">${escapeHtml(err.message)}</p>
-            </div>
-          </div>
-          <button onclick="submitWizard()" class="mt-4 btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Try Again
+    
+  } catch (error) {
+    // Handle network errors, parsing errors, or API errors
+    console.error('Error generating strategy:', error);
+    
+    if (resultArea) {
+      resultArea.innerHTML = `
+        <div class="text-center py-12">
+          <div class="text-red-500 text-4xl mb-4">⚠️</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">Failed to Generate Strategy</h3>
+          <p class="text-gray-600 mb-4">${escapeHtml(error.message || 'An unexpected error occurred. Please try again.')}</p>
+          <button onclick="prevStep()" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
+            Go Back & Try Again
           </button>
         </div>
       `;
     }
+    
+    showNotification("Failed to generate strategy. Please try again.", "error");
   }
+  
+  // Reset the flag after navigation
+  state.allowStep4 = false;
 }
 
 function renderResult(data) {
@@ -515,16 +518,25 @@ function renderResult(data) {
   if (!area) return;
 
   const strategy = data.strategy_text || data.strategy || "No strategy text returned.";
+  
+  // Store original markdown text for copy/download
+  area.dataset.originalMarkdown = strategy;
+  
+  // Parse markdown and render with beautiful formatting
+  const formattedStrategy = renderMarkdown(strategy);
+  
   const rawPrompt = data.raw_prompt 
     ? `<details class="mt-4">
         <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm mb-2">View Prompt (Debug)</summary>
-        <pre class="result-content mt-2 text-xs">${escapeHtml(data.raw_prompt)}</pre>
+        <pre class="mt-2 text-xs bg-gray-50 p-3 rounded overflow-auto">${escapeHtml(data.raw_prompt)}</pre>
        </details>` 
     : "";
 
   area.innerHTML = `
     <div class="space-y-4">
-      <div class="result-content">${escapeHtml(strategy)}</div>
+      <div class="result-content markdown-content shadow-sm">
+        ${formattedStrategy}
+      </div>
       ${rawPrompt}
       <div class="flex gap-3 mt-6">
         <button onclick="copyStrategy()" class="btn-secondary text-gray-700 px-4 py-2 rounded-lg text-sm font-medium flex-1">
@@ -536,34 +548,158 @@ function renderResult(data) {
       </div>
     </div>
   `;
+  
+  // Restore the original markdown data attribute after innerHTML update
+  area.dataset.originalMarkdown = strategy;
+}
+
+// Render markdown with marked.js and custom styling
+function renderMarkdown(text) {
+  if (!text) return '<div class="text-gray-400">No strategy content available.</div>';
+  
+  // Check if marked.js is available
+  if (typeof marked === 'undefined') {
+    // Fallback to plain text if marked.js is not loaded
+    return `<div class="text-gray-700 whitespace-pre-wrap">${escapeHtml(text)}</div>`;
+  }
+
+  // Configure marked.js options
+  marked.setOptions({
+    breaks: true, // Convert line breaks to <br>
+    gfm: true, // GitHub Flavored Markdown
+    headerIds: false, // Don't add IDs to headers
+    mangle: false, // Don't mangle email addresses
+  });
+
+  // Configure marked.js with custom renderer for enhanced styling
+  const renderer = new marked.Renderer();
+  
+  // Custom heading renderers with icons
+  renderer.heading = function(text, level) {
+    const icons = {
+      1: '🎯',
+      2: '📋',
+      3: '📌',
+      4: '📍',
+      5: '•',
+      6: '◦'
+    };
+    const icon = icons[level] || '';
+    const tag = `h${level}`;
+    const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+    return `<${tag} id="${id}">${icon ? `<span class="mr-2">${icon}</span>` : ''}${text}</${tag}>`;
+  };
+
+  // Custom list item renderer
+  renderer.listitem = function(text) {
+    // Check if it's a task list item
+    if (/^\[[ x]\]\s/.test(text)) {
+      const checked = /^\[x\]\s/i.test(text);
+      const content = text.replace(/^\[[ x]\]\s/i, '');
+      return `<li class="task-item ${checked ? 'checked' : ''}">${checked ? '✅' : '☐'} ${content}</li>`;
+    }
+    return `<li>${text}</li>`;
+  };
+
+  // Custom blockquote renderer
+  renderer.blockquote = function(quote) {
+    return `<blockquote>💡 ${quote}</blockquote>`;
+  };
+
+  // Custom code block renderer
+  renderer.code = function(code, language) {
+    const lang = language || 'text';
+    return `<pre><code class="language-${lang}">${escapeHtml(code)}</code></pre>`;
+  };
+
+  // Custom strong renderer
+  renderer.strong = function(text) {
+    return `<strong class="font-semibold text-gray-900">${text}</strong>`;
+  };
+
+  // Custom paragraph renderer
+  renderer.paragraph = function(text) {
+    // Skip empty paragraphs
+    if (!text.trim()) return '';
+    return `<p>${text}</p>`;
+  };
+
+  // Configure marked with options and custom renderer
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false,
+    renderer: renderer
+  });
+
+  try {
+    // Parse and render markdown
+    const html = marked.parse(text);
+    return html;
+  } catch (error) {
+    console.error('Markdown parsing error:', error);
+    // Fallback to escaped HTML
+    return `<div class="text-gray-700 whitespace-pre-wrap">${escapeHtml(text)}</div>`;
+  }
 }
 
 function copyStrategy() {
-  const resultContent = document.querySelector(".result-content");
-  if (resultContent) {
-    const text = resultContent.textContent;
+  // Try to get original markdown first, fallback to rendered text
+  const resultArea = document.getElementById("resultArea");
+  let text = '';
+  
+  if (resultArea && resultArea.dataset.originalMarkdown) {
+    // Use original markdown text
+    text = resultArea.dataset.originalMarkdown;
+  } else {
+    // Fallback to rendered text content
+    const resultContent = document.querySelector("#resultArea .result-content");
+    if (resultContent) {
+      text = resultContent.textContent || resultContent.innerText;
+    }
+  }
+  
+  if (text) {
     navigator.clipboard.writeText(text).then(() => {
       showNotification("Strategy copied to clipboard!", "info");
     }).catch(() => {
       showNotification("Failed to copy. Please select and copy manually.", "error");
     });
+  } else {
+    showNotification("No strategy content found to copy.", "error");
   }
 }
 
 function downloadStrategy() {
-  const resultContent = document.querySelector(".result-content");
-  if (resultContent) {
-    const text = resultContent.textContent;
-    const blob = new Blob([text], { type: "text/plain" });
+  // Try to get original markdown first, fallback to rendered text
+  const resultArea = document.getElementById("resultArea");
+  let text = '';
+  
+  if (resultArea && resultArea.dataset.originalMarkdown) {
+    // Use original markdown text
+    text = resultArea.dataset.originalMarkdown;
+  } else {
+    // Fallback to rendered text content
+    const resultContent = document.querySelector("#resultArea .result-content");
+    if (resultContent) {
+      text = resultContent.textContent || resultContent.innerText;
+    }
+  }
+  
+  if (text) {
+    const blob = new Blob([text], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `marketing-strategy-${new Date().toISOString().split("T")[0]}.txt`;
+    a.download = `marketing-strategy-${new Date().toISOString().split("T")[0]}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showNotification("Strategy downloaded!", "info");
+  } else {
+    showNotification("No strategy content found to download.", "error");
   }
 }
 
@@ -577,8 +713,10 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-// Make fillDefaults available globally
+// Make functions available globally for onclick handlers
 window.fillDefaults = fillDefaults;
+window.copyStrategy = copyStrategy;
+window.downloadStrategy = downloadStrategy;
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", () => {

@@ -12,7 +12,7 @@ router = APIRouter()
 @router.post("/generate-strategy", response_model=StrategyResponse)
 async def generate_strategy(payload: StrategyRequest):
     """
-    Generate marketing strategy using AWS Bedrock Claude model.
+    Generate marketing strategy using OpenRouter LLM API.
     """
     logger.info(f"Received strategy request: platforms={payload.platforms}, duration={payload.duration_days} days")
     

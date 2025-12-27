@@ -1,12 +1,12 @@
 """
-Service layer responsible for building prompts and invoking Bedrock.
+Service layer responsible for building prompts and invoking OpenRouter.
 """
 
 import logging
 from typing import Dict, List, Optional
 
 from app.config import Settings
-from app.llm.bedrock_client import BedrockClient
+from app.llm.openrouter_client import OpenRouterClient
 from app.models.schemas import StrategyRequest, StrategyResponse
 from app.prompt.system_prompt import SYSTEM_PROMPT
 
@@ -76,7 +76,7 @@ class StrategyService:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.client = BedrockClient(settings)
+        self.client = OpenRouterClient(settings)
 
     def _normalize_insights(self, platforms: List[str], insights: Dict) -> Dict[str, Dict[str, str]]:
         """
@@ -163,7 +163,7 @@ Output instructions
 
     def generate_strategy(self, payload: StrategyRequest) -> StrategyResponse:
         """
-        Generate strategy by building prompt and invoking Bedrock.
+        Generate strategy by building prompt and invoking OpenRouter.
         Returns StrategyResponse with strategy text and raw prompt.
         """
         try:
@@ -171,7 +171,7 @@ Output instructions
             user_prompt = self._build_user_prompt(payload)
             logger.debug(f"User prompt length: {len(user_prompt)} characters")
             
-            logger.info("Invoking Claude via Bedrock")
+            logger.info(f"Invoking model via OpenRouter: {self.settings.openrouter_model}")
             strategy_text = self.client.invoke_claude(
                 system_prompt=SYSTEM_PROMPT,
                 user_prompt=user_prompt,
@@ -181,7 +181,7 @@ Output instructions
             
             if not strategy_text or not isinstance(strategy_text, str):
                 logger.error(f"Invalid strategy_text type: {type(strategy_text)}, value: {strategy_text}")
-                raise RuntimeError("Bedrock returned invalid or empty strategy text")
+                raise RuntimeError("OpenRouter returned invalid or empty strategy text")
             
             logger.info(f"Strategy generated successfully, length: {len(strategy_text)} characters")
             

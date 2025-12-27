@@ -62,6 +62,12 @@ async def serve_index():
     return FileResponse(os.path.join(static_dir, "index.html"))
 
 
+# Serve the results page
+@app.get("/result.html", include_in_schema=False)
+async def serve_result():
+    return FileResponse(os.path.join(static_dir, "result.html"))
+
+
 # API routes (no prefix to keep /generate-strategy as requested)
 app.include_router(generate_router)
 
