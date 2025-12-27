@@ -2,6 +2,7 @@
 Service layer responsible for building prompts and invoking Bedrock.
 """
 
+import logging
 from typing import Dict, List, Optional
 
 from app.config import Settings
@@ -9,51 +10,66 @@ from app.llm.bedrock_client import BedrockClient
 from app.models.schemas import StrategyRequest, StrategyResponse
 from app.prompt.system_prompt import SYSTEM_PROMPT
 
+logger = logging.getLogger(__name__)
+
 
 class StrategyService:
     # Mapping of platform to its expected/allowed insight keys
     PLATFORM_SCHEMA_MAP: Dict[str, List[str]] = {
         "instagram": [
             "followers",
-            "average_reach",
             "average_reel_views",
-            "engagement_rate",
+            "accounts_reached",
+            "profile_visits",
             "posting_frequency",
+            "primary_content_type",
         ],
         "facebook": [
-            "page_likes",
-            "average_post_reach",
-            "ad_usage",
-            "content_type_mix",
+            "page_followers",
+            "average_reach",
+            "engagement_level",
+            "page_type",
         ],
         "twitter": [
             "followers",
-            "impressions_last_28_days",
-            "engagement_rate",
+            "average_impressions",
             "posting_frequency",
+            "content_style",
+            "profile_visits",
         ],
         "x": [  # alias for twitter
             "followers",
-            "impressions_last_28_days",
-            "engagement_rate",
+            "average_impressions",
             "posting_frequency",
+            "content_style",
+            "profile_visits",
         ],
         "linkedin": [
             "followers",
-            "profile_type",
-            "impressions_last_30_days",
-            "lead_goal",
+            "average_impressions",
+            "profile_views",
+            "content_type",
+            "posting_frequency",
         ],
         "youtube": [
             "subscribers",
             "average_views",
-            "watch_time_hours",
-            "posting_frequency",
+            "average_watch_time",
+            "upload_frequency",
+            "post_shorts",
         ],
         "tiktok": [
             "followers",
             "average_views",
-            "viral_hits",
+            "average_watch_time",
+            "posting_frequency",
+            "trend_usage",
+        ],
+        "pinterest": [
+            "monthly_viewers",
+            "average_pin_impressions",
+            "link_clicks",
+            "content_type",
             "posting_frequency",
         ],
     }
@@ -74,13 +90,20 @@ class StrategyService:
 
         for platform in platforms:
             key = platform.lower()
+            # Handle Twitter/X alias - both map to twitter schema
+            if key == "x":
+                key = "twitter"
+            
             allowed = self.PLATFORM_SCHEMA_MAP.get(key)
             if not allowed:
                 continue
 
             platform_payload: Dict[str, Optional[str]] = {}
             # Prefer nested object per platform if present
-            nested = insights.get(platform) or insights.get(platform.lower()) if isinstance(insights, dict) else None
+            # Check for original platform name, lowercase, and schema key
+            nested = None
+            if isinstance(insights, dict):
+                nested = insights.get(platform) or insights.get(platform.lower()) or insights.get(key)
             if isinstance(nested, dict):
                 for field in allowed:
                     value = nested.get(field)
@@ -139,13 +162,32 @@ Output instructions
 """
 
     def generate_strategy(self, payload: StrategyRequest) -> StrategyResponse:
-        user_prompt = self._build_user_prompt(payload)
-        strategy_text = self.client.invoke_claude(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            max_tokens=self.settings.max_tokens,
-            temperature=self.settings.temperature,
-        )
-        return StrategyResponse(strategy_text=strategy_text, raw_prompt=user_prompt)
+        """
+        Generate strategy by building prompt and invoking Bedrock.
+        Returns StrategyResponse with strategy text and raw prompt.
+        """
+        try:
+            logger.debug("Building user prompt")
+            user_prompt = self._build_user_prompt(payload)
+            logger.debug(f"User prompt length: {len(user_prompt)} characters")
+            
+            logger.info("Invoking Claude via Bedrock")
+            strategy_text = self.client.invoke_claude(
+                system_prompt=SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+                max_tokens=self.settings.max_tokens,
+                temperature=self.settings.temperature,
+            )
+            
+            if not strategy_text or not isinstance(strategy_text, str):
+                logger.error(f"Invalid strategy_text type: {type(strategy_text)}, value: {strategy_text}")
+                raise RuntimeError("Bedrock returned invalid or empty strategy text")
+            
+            logger.info(f"Strategy generated successfully, length: {len(strategy_text)} characters")
+            
+            return StrategyResponse(strategy_text=strategy_text, raw_prompt=user_prompt)
+        except Exception as exc:
+            logger.error(f"Error in generate_strategy: {type(exc).__name__}: {exc}", exc_info=True)
+            raise
 
 

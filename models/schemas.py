@@ -1,5 +1,5 @@
 # app/models/schemas.py
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -7,11 +7,20 @@ from pydantic import BaseModel, Field, validator
 class StrategyRequest(BaseModel):
     """
     User-provided inputs from the multi-step form.
+    
+    Schema contract:
+    - platforms: List of platform names (e.g., ["Instagram", "Facebook"])
+    - insights: Nested dict with platform keys containing platform-specific metrics
+      Format: {"instagram": {"followers": "1200", ...}, "facebook": {...}}
+    - duration_days: Must be one of {15, 30, 45, 60, 90}
+    - goal: Optional primary objective
+    - audience: Optional audience/niche description
     """
 
     platforms: List[str] = Field(..., description="Selected social platforms")
-    insights: Dict[str, Optional[str]] = Field(
-        default_factory=dict, description="Free-form insight key/value pairs"
+    insights: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Platform-specific insights. Can be nested: {platform: {field: value}} or flat: {field: value}"
     )
     goal: Optional[str] = Field(default=None, description="Primary outcome user wants")
     duration_days: int = Field(..., description="Plan duration: 15/30/45/60/90 days")
@@ -26,7 +35,7 @@ class StrategyRequest(BaseModel):
     @validator("platforms")
     def validate_platforms(cls, value: List[str]) -> List[str]:
         if not value:
-            raise ValueError("At least one platform is required.")
+            raise ValueError("At least one platform is required")
         return value
 
 
