@@ -27,6 +27,10 @@ class OpenRouterClient:
         Get or create OpenRouter client.
         
         Requires OPENROUTER_API_KEY environment variable.
+        
+        Note: OpenRouter identity headers (HTTP-Referer and X-Title) are attached
+        at client initialization to ensure they are always present in all requests.
+        This is required for proper authentication and prevents 401 "User not found" errors.
         """
         if self._client:
             return self._client
@@ -37,9 +41,17 @@ class OpenRouterClient:
             )
 
         try:
+            # OpenRouter requires identity headers on all requests for proper authentication.
+            # Setting them as default_headers ensures they're included in every API call.
+            default_headers = {
+                "HTTP-Referer": self.settings.openrouter_site_url or "http://localhost",
+                "X-Title": self.settings.openrouter_site_name or "Clique Strategist",
+            }
+            
             self._client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=self.settings.openrouter_api_key,
+                default_headers=default_headers,
             )
             logger.info("OpenRouter client initialized successfully")
         except Exception as exc:
@@ -76,26 +88,19 @@ class OpenRouterClient:
             "content": user_prompt,
         })
 
-        # Prepare extra headers for OpenRouter
-        extra_headers = {}
-        if self.settings.openrouter_site_url:
-            extra_headers["HTTP-Referer"] = self.settings.openrouter_site_url
-        if self.settings.openrouter_site_name:
-            extra_headers["X-Title"] = self.settings.openrouter_site_name
-
         try:
             logger.debug(
                 f"Sending request to OpenRouter: model={self.settings.openrouter_model}, "
                 f"max_tokens={max_tokens or self.settings.max_tokens}"
             )
             
+            # Identity headers are set at client initialization (default_headers),
+            # so they're automatically included in all requests.
             completion = client.chat.completions.create(
                 model=self.settings.openrouter_model,
                 messages=messages,
                 max_tokens=max_tokens or self.settings.max_tokens,
                 temperature=temperature if temperature is not None else self.settings.temperature,
-                extra_headers=extra_headers if extra_headers else None,
-                extra_body={},
             )
             
             logger.debug("Received response from OpenRouter")

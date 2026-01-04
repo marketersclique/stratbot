@@ -7,8 +7,8 @@ from typing import Dict, List, Optional
 
 from app.config import Settings
 from app.llm.openrouter_client import OpenRouterClient
-from app.models.schemas import StrategyRequest, StrategyResponse
-from app.prompt.system_prompt import SYSTEM_PROMPT
+from app.models.schemas import StrategyRequest, StrategyResponse, CalendarRequest, CalendarResponse
+from app.prompt.system_prompt import SYSTEM_PROMPT, CALENDAR_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +188,68 @@ Output instructions
             return StrategyResponse(strategy_text=strategy_text, raw_prompt=user_prompt)
         except Exception as exc:
             logger.error(f"Error in generate_strategy: {type(exc).__name__}: {exc}", exc_info=True)
+            raise
+
+    def generate_calendar(self, payload: CalendarRequest) -> CalendarResponse:
+        """
+        Generate a personalized content calendar based on the provided strategy.
+        Returns CalendarResponse with calendar text and raw prompt.
+        """
+        try:
+            platforms = ", ".join(payload.platforms)
+            audience = payload.audience or "Not specified"
+            goal = payload.goal or "General growth / engagement"
+            
+            # Calculate number of weeks
+            weeks = (payload.duration_days + 6) // 7  # Round up
+            
+            # Use full strategy text (not truncated) for better context
+            user_prompt = f"""
+Context
+- Strategy to implement: {payload.strategy_text}
+- Platforms: {platforms}
+- Primary goal: {goal}
+- Duration: {payload.duration_days} days ({weeks} weeks)
+- Audience/niche: {audience}
+
+Output instructions
+- Generate a detailed weekly and day-wise content calendar for ALL {payload.duration_days} days
+- Follow the mandatory output structure exactly
+- For EACH DAY, provide:
+  * Platform(s) to post on
+  * Content Type (Reel, Post, Story, Carousel, etc.)
+  * Specific Content Idea (be creative and specific)
+  * Hook (attention-grabbing opening)
+  * Script/Description (detailed content description or script)
+  * CTA (call-to-action)
+  * Optimization Tip (platform-specific best practice)
+- Include platform-specific optimization tips for each day
+- Ensure content variety - no repetitive ideas
+- Align all content with the strategy's goals and audience
+- Use markdown formatting with proper headings, subheadings, and bullet points
+- Include emojis/icons for visual hierarchy and better readability
+- Make it actionable and ready to execute
+
+IMPORTANT: Generate content for EVERY SINGLE DAY ({payload.duration_days} days total). Do not skip any days.
+"""
+            
+            logger.info(f"Generating calendar for {weeks} weeks across {platforms}")
+            calendar_text = self.client.invoke_claude(
+                system_prompt=CALENDAR_SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+                max_tokens=self.settings.max_tokens,
+                temperature=self.settings.temperature,
+            )
+            
+            if not calendar_text or not isinstance(calendar_text, str):
+                logger.error(f"Invalid calendar_text type: {type(calendar_text)}, value: {calendar_text}")
+                raise RuntimeError("OpenRouter returned invalid or empty calendar text")
+            
+            logger.info(f"Calendar generated successfully, length: {len(calendar_text)} characters")
+            
+            return CalendarResponse(calendar_text=calendar_text, raw_prompt=user_prompt)
+        except Exception as exc:
+            logger.error(f"Error in generate_calendar: {type(exc).__name__}: {exc}", exc_info=True)
             raise
 
 

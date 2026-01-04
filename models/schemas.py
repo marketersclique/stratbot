@@ -46,3 +46,28 @@ class StrategyResponse(BaseModel):
 
     strategy_text: str = Field(..., description="Formatted strategy following required sections")
     raw_prompt: str = Field(..., description="Prompt sent to the model for debugging/traceability")
+
+
+class CalendarRequest(BaseModel):
+    """
+    Request for generating a personalized content calendar based on a strategy.
+    """
+    strategy_text: str = Field(..., description="The generated strategy text to base the calendar on")
+    platforms: List[str] = Field(..., description="Selected social platforms")
+    duration_days: int = Field(..., description="Plan duration: 15/30/45/60/90 days")
+    goal: Optional[str] = Field(default=None, description="Primary outcome user wants")
+    audience: Optional[str] = Field(default=None, description="Optional audience or niche description")
+
+    @validator("duration_days")
+    def validate_duration(cls, value: int) -> int:
+        if value not in {15, 30, 45, 60, 90}:
+            raise ValueError("duration_days must be one of 15, 30, 45, 60, 90")
+        return value
+
+
+class CalendarResponse(BaseModel):
+    """
+    Structured response for the content calendar.
+    """
+    calendar_text: str = Field(..., description="Formatted weekly and day-wise content calendar")
+    raw_prompt: str = Field(..., description="Prompt sent to the model for debugging/traceability")

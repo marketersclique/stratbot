@@ -357,6 +357,34 @@
       background: #f3f4f6;
     }
 
+    /* Calendar-specific styling */
+    .markdown-content strong {
+      color: #FF6527;
+      font-weight: 600;
+    }
+
+    /* Better spacing for calendar content */
+    .markdown-content p + ul,
+    .markdown-content p + ol {
+      margin-top: -0.5rem;
+    }
+
+    /* Calendar day highlights */
+    .markdown-content ul li strong {
+      color: #ea580c;
+      font-weight: 600;
+    }
+
+    /* Prose styling for better readability */
+    .prose {
+      max-width: none;
+    }
+
+    .prose-lg {
+      font-size: 1.125rem;
+      line-height: 1.75;
+    }
+
     .result-content::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -416,9 +444,124 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Engagement Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6b7280;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
+  <!-- Top Navigation Bar with Authentication -->
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo/Brand -->
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold">
+            <span class="gradient-text">Clique Strategist</span>
+          </h1>
+        </div>
+        
+        <!-- Authentication Status (Right Side) -->
+        <div id="authStatus" class="flex items-center gap-4">
+          <!-- Loading state -->
+          <div id="authLoading" class="flex items-center gap-2 text-gray-500 text-sm">
+            <div class="loading-spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+            <span>Checking...</span>
+          </div>
+          
+          <!-- Authenticated state (hidden by default) -->
+          <div id="authAuthenticated" class="hidden flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm" id="userAvatar">
+                U
+              </div>
+              <div class="hidden sm:block">
+                <div class="text-sm font-medium text-gray-900" id="userName">User</div>
+                <div class="text-xs text-gray-500" id="userEmail">user@example.com</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span class="text-xs font-medium text-green-700">Authenticated</span>
+            </div>
+            <button onclick="updateAuthStatus()" class="text-gray-400 hover:text-gray-600 text-xs px-2 py-1" title="Refresh auth status">
+              🔄
+            </button>
+          </div>
+          
+          <!-- Not authenticated state (hidden by default) -->
+          <div id="authNotAuthenticated" class="hidden flex items-center gap-2">
+            <button onclick="checkAuthBeforeRedirect()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium">
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
     <!-- Header Card -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 mb-6">
@@ -590,6 +733,29 @@
     <!-- Footer -->
     <div class="text-center mt-8 text-gray-500 text-sm">
       <p>Powered by Clique Strategist AI</p>
+    </div>
+  </div>
+
+  <!-- Engagement Modal for Calendar Generation -->
+  <div id="engagementModal" class="modal-overlay">
+    <div class="modal-content relative">
+      <button class="modal-close" onclick="closeEngagementModal()" aria-label="Close modal">×</button>
+      <div class="flex flex-col items-center text-center">
+        <h2 class="text-2xl font-bold mb-3 text-center gradient-text">
+          You're One Step Away From Full Access.
+        </h2>
+        <p class="text-gray-600 text-center mb-6">
+          Join the Top SMM Community to generate your personalized calendar.
+        </p>
+        <div class="w-full flex flex-col gap-3">
+          <button 
+            onclick="redirectToSignup()" 
+            class="w-full gradient-primary text-white hover:opacity-90 shadow-md hover:scale-105 transition-transform duration-300 cursor-pointer px-6 py-3 rounded-lg font-semibold"
+          >
+            Get Full Access
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -6,13 +6,11 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-# Load .env file from app directory (where this file is located)
-env_path = Path(__file__).parent / ".env"
-if env_path.exists():
-    load_dotenv(dotenv_path=env_path, override=True)
-else:
-    # Fallback: try loading from current directory
-    load_dotenv(override=True)
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_path = BASE_DIR / ".env"
+
+load_dotenv(dotenv_path=env_path, override=True)
+
 
 
 class Settings(BaseModel):
@@ -24,6 +22,8 @@ class Settings(BaseModel):
     )
     openrouter_site_url: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_URL")
     openrouter_site_name: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_NAME")
+    supabase_url: Optional[str] = Field(default=None, alias="SUPABASE_URL")
+    supabase_key: Optional[str] = Field(default=None, alias="SUPABASE_ANON_KEY")
     max_tokens: int = 4000
     temperature: float = 0.6
 
@@ -44,5 +44,7 @@ def get_settings() -> Settings:
         "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
         "OPENROUTER_SITE_URL": os.getenv("OPENROUTER_SITE_URL"),
         "OPENROUTER_SITE_NAME": os.getenv("OPENROUTER_SITE_NAME"),
+        "SUPABASE_URL": os.getenv("SUPABASE_URL"),
+        "SUPABASE_ANON_KEY": os.getenv("SUPABASE_ANON_KEY"),
     }
     return Settings(**env_vars)
