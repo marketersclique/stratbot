@@ -188,12 +188,12 @@ function renderPlatformFields(platform, config) {
           ${field.label} <span class="text-red-500">*</span>
         </label>
         ${field.helper ? `<p class="text-xs text-gray-500 mb-1">${field.helper}</p>` : ''}
-        <input 
-          type="text" 
-          id="${platform}-${field.id}" 
+        <input
+          type="text"
+          id="${platform}-${field.id}"
           data-platform="${platform}"
           data-field="${field.id}"
-          placeholder="${field.placeholder}" 
+          placeholder="${field.placeholder}"
           class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           ${state.platformData[platform] && state.platformData[platform][field.id] ? `value="${state.platformData[platform][field.id]}"` : ''}
         />
@@ -210,8 +210,8 @@ function renderPlatformFields(platform, config) {
           ${field.label} <span class="text-gray-400 font-normal text-xs">(optional)</span>
         </label>
         ${isSelect ? `
-          <select 
-            id="${platform}-${field.id}" 
+          <select
+            id="${platform}-${field.id}"
             data-platform="${platform}"
             data-field="${field.id}"
             class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 bg-white"
@@ -220,12 +220,12 @@ function renderPlatformFields(platform, config) {
             ${field.options.map(opt => `<option value="${opt}" ${state.platformData[platform] && state.platformData[platform][field.id] === opt ? 'selected' : ''}>${opt}</option>`).join('')}
           </select>
         ` : `
-          <input 
-            type="text" 
-            id="${platform}-${field.id}" 
+          <input
+            type="text"
+            id="${platform}-${field.id}"
             data-platform="${platform}"
             data-field="${field.id}"
-            placeholder="${field.placeholder}" 
+            placeholder="${field.placeholder}"
             class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20"
             ${state.platformData[platform] && state.platformData[platform][field.id] ? `value="${state.platformData[platform][field.id]}"` : ''}
           />
@@ -271,14 +271,14 @@ function showStep(stepNumber) {
   }
 
   state.step = stepNumber;
-  
+
   // Render platform forms when entering step 2
   if (stepNumber === 2) {
     renderPlatformForms();
     // Attach event listeners to collect data
     setTimeout(() => attachFormListeners(), 100);
   }
-  
+
   // Hide all steps with fade out
   steps.forEach((step) => {
     const stepNum = Number(step.dataset.step);
@@ -329,7 +329,7 @@ function nextStep() {
     Array.from(state.platforms).forEach(platform => {
       const config = PLATFORM_FORMS[platform];
       if (!config) return;
-      
+
       config.required.forEach(field => {
         const input = document.getElementById(`${platform}-${field.id}`);
         if (input && !input.value.trim()) {
@@ -340,7 +340,7 @@ function nextStep() {
         }
       });
     });
-    
+
     if (hasErrors) {
       showNotification("Please fill in all required fields for each selected platform.", "error");
       return;
@@ -362,25 +362,25 @@ function resetWizard() {
   state.platformData = {};
   state.estimatedFlags = {};
   refreshChips();
-  
+
   const goalEl = document.getElementById("goal");
   const durationEl = document.getElementById("duration");
   const audienceEl = document.getElementById("audience");
-  
+
   if (goalEl) goalEl.value = "";
   if (durationEl) durationEl.value = "30";
   if (audienceEl) audienceEl.value = "";
-  
+
   const resultArea = document.getElementById("resultArea");
   if (resultArea) {
     resultArea.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">Ready to generate your strategy</p></div>';
   }
-  
+
   // Clear stored strategy data when user starts over
   localStorage.removeItem('stratbot_strategy_data');
   localStorage.removeItem('stratbot_has_strategy_response');
   localStorage.removeItem('stratbot_pending_calendar');
-  
+
   showStep(1);
 }
 
@@ -388,8 +388,8 @@ function showNotification(message, type = "info") {
   // Create a simple toast notification
   const toast = document.createElement("div");
   toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-    type === "error" 
-      ? "bg-red-500 text-white" 
+    type === "error"
+      ? "bg-red-500 text-white"
       : "bg-blue-500 text-white"
   }`;
   toast.textContent = message;
@@ -410,7 +410,7 @@ async function submitWizard() {
 
   const goalEl = document.getElementById("goal");
   const durationEl = document.getElementById("duration");
-  
+
   if (goalEl && !goalEl.value) {
     showNotification("Please select a primary goal.", "error");
     return;
@@ -456,10 +456,10 @@ async function submitWizard() {
 
   // Allow navigation to step 4
   state.allowStep4 = true;
-  
+
   // Navigate to step 4 and show loading spinner
   showStep(4);
-  
+
   // Show loading state in result area
   const resultArea = document.getElementById("resultArea");
   if (resultArea) {
@@ -490,14 +490,14 @@ async function submitWizard() {
 
     // Parse successful response
     const data = await response.json();
-    
+
     // Render the strategy result
     renderResult(data);
-    
+
   } catch (error) {
     // Handle network errors, parsing errors, or API errors
     console.error('Error generating strategy:', error);
-    
+
     if (resultArea) {
       resultArea.innerHTML = `
         <div class="text-center py-12">
@@ -510,10 +510,10 @@ async function submitWizard() {
         </div>
       `;
     }
-    
+
     showNotification("Failed to generate strategy. Please try again.", "error");
   }
-  
+
   // Reset the flag after navigation
   state.allowStep4 = false;
 }
@@ -523,15 +523,15 @@ function renderResult(data) {
   if (!area) return;
 
   const strategy = data.strategy_text || data.strategy || "No strategy text returned.";
-  
+
   // Store original markdown text for copy/download
   area.dataset.originalMarkdown = strategy;
-  
+
   // Store FULL strategy response data in localStorage for restoration after signup
   // Get duration from form input
   const durationEl = document.getElementById("duration");
   const durationValue = durationEl ? parseInt(durationEl.value, 10) : 30;
-  
+
   // Validate duration
   if (isNaN(durationValue) || ![15, 30, 45, 60, 90].includes(durationValue)) {
     console.error('Invalid duration value:', durationValue);
@@ -539,7 +539,7 @@ function renderResult(data) {
     const validDuration = 30;
     console.warn('Using fallback duration:', validDuration);
   }
-  
+
   const strategyData = {
     strategy_text: strategy,
     raw_prompt: data.raw_prompt || null,
@@ -551,22 +551,22 @@ function renderResult(data) {
     // Store the full response for restoration
     fullResponse: data
   };
-  
+
   // Log for debugging
   console.log('Storing strategy data with duration:', durationValue, 'days');
-  
+
   localStorage.setItem('stratbot_strategy_data', JSON.stringify(strategyData));
   // Also store a flag to indicate we have a strategy response to restore
   localStorage.setItem('stratbot_has_strategy_response', 'true');
-  
+
   // Parse markdown and render with beautiful formatting
   const formattedStrategy = renderMarkdown(strategy);
-  
-  const rawPrompt = data.raw_prompt 
+
+  const rawPrompt = data.raw_prompt
     ? `<details class="mt-4">
         <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm mb-2">View Prompt (Debug)</summary>
         <pre class="mt-2 text-xs bg-gray-50 p-3 rounded overflow-auto">${escapeHtml(data.raw_prompt)}</pre>
-       </details>` 
+       </details>`
     : "";
 
   area.innerHTML = `
@@ -588,7 +588,7 @@ function renderResult(data) {
       </div>
     </div>
   `;
-  
+
   // Restore the original markdown data attribute after innerHTML update
   area.dataset.originalMarkdown = strategy;
 }
@@ -596,7 +596,7 @@ function renderResult(data) {
 // Render markdown with marked.js and custom styling
 function renderMarkdown(text) {
   if (!text) return '<div class="text-gray-400">No strategy content available.</div>';
-  
+
   // Check if marked.js is available
   if (typeof marked === 'undefined') {
     // Fallback to plain text if marked.js is not loaded
@@ -613,7 +613,7 @@ function renderMarkdown(text) {
 
   // Configure marked.js with custom renderer for enhanced styling
   const renderer = new marked.Renderer();
-  
+
   // Custom heading renderers with icons
   renderer.heading = function(text, level) {
     const icons = {
@@ -688,7 +688,7 @@ function copyStrategy() {
   // Try to get original markdown first, fallback to rendered text
   const resultArea = document.getElementById("resultArea");
   let text = '';
-  
+
   if (resultArea && resultArea.dataset.originalMarkdown) {
     // Use original markdown text
     text = resultArea.dataset.originalMarkdown;
@@ -699,7 +699,7 @@ function copyStrategy() {
       text = resultContent.textContent || resultContent.innerText;
     }
   }
-  
+
   if (text) {
     navigator.clipboard.writeText(text).then(() => {
       showNotification("Strategy copied to clipboard!", "info");
@@ -715,7 +715,7 @@ function downloadStrategy() {
   // Try to get original markdown first, fallback to rendered text
   const resultArea = document.getElementById("resultArea");
   let text = '';
-  
+
   if (resultArea && resultArea.dataset.originalMarkdown) {
     // Use original markdown text
     text = resultArea.dataset.originalMarkdown;
@@ -726,7 +726,7 @@ function downloadStrategy() {
       text = resultContent.textContent || resultContent.innerText;
     }
   }
-  
+
   if (text) {
     const blob = new Blob([text], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -754,7 +754,7 @@ function checkAuthentication() {
       const trimmed = cookie.trim();
       return trimmed.includes('sb-') && trimmed.includes('-auth-token');
     });
-    
+
     if (supabaseCookie) {
       // Cookie exists - user is likely authenticated
       // Note: We can't easily parse the cookie value here, but its presence indicates auth
@@ -763,15 +763,15 @@ function checkAuthentication() {
         return true;
       }
     }
-    
+
     // Method 2: Check localStorage for Supabase tokens (fallback)
     const keys = Object.keys(localStorage);
     const supabaseKey = keys.find(key => {
       // Match patterns like "sb-<project-ref>-auth-token" or similar
-      return (key.includes('supabase') || key.startsWith('sb-')) && 
+      return (key.includes('supabase') || key.startsWith('sb-')) &&
              (key.includes('auth-token') || key.includes('auth'));
     });
-    
+
     if (supabaseKey) {
       const tokenData = localStorage.getItem(supabaseKey);
       if (tokenData) {
@@ -795,7 +795,7 @@ function checkAuthentication() {
         }
       }
     }
-    
+
     // Method 3: Check Redux persisted auth state (if main app uses it)
     const reduxState = localStorage.getItem('persist:root');
     if (reduxState) {
@@ -815,19 +815,19 @@ function checkAuthentication() {
         // Invalid state, continue
       }
     }
-    
+
     // Method 4: Check for any Supabase-related cookies (broader check)
     const allCookies = document.cookie.split(';');
     const hasSupabaseSession = allCookies.some(cookie => {
       const trimmed = cookie.trim().toLowerCase();
       return trimmed.includes('sb-') || trimmed.includes('supabase');
     });
-    
+
     if (hasSupabaseSession) {
       // Likely authenticated if Supabase cookies exist
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.error('Error checking authentication:', error);
@@ -846,7 +846,7 @@ function showEngagementModal() {
     generateCalendar();
     return;
   }
-  
+
   // Double-check authentication status before showing modal
   checkBackendAuthentication().then(authResult => {
     if (authResult.authenticated) {
@@ -857,7 +857,7 @@ function showEngagementModal() {
       });
       return;
     }
-    
+
     // User is NOT authenticated - show the modal
     const modal = document.getElementById("engagementModal");
     if (modal) {
@@ -882,10 +882,10 @@ function closeEngagementModal() {
   if (modal) {
     modal.classList.remove("active");
     document.body.style.overflow = "";
-    
+
     // Show notice that signup is mandatory
     showNotification("Sign up is required to generate your personalized calendar.", "info");
-    
+
     // Re-enable button
     const btn = document.getElementById("generateCalendarBtn");
     if (btn) {
@@ -901,14 +901,14 @@ function getMainAppUrl() {
   if (window.STRATBOT_MAIN_APP_URL) {
     return window.STRATBOT_MAIN_APP_URL;
   }
-  
+
   // Auto-detect: if stratbot is running on localhost, assume main app is also on localhost
   const hostname = window.location.hostname;
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
     // Development: use localhost:3000 (Next.js default port)
     return 'http://localhost:3000';
   }
-  
+
   // Production: use the deployed URL
   return 'https://marketersclique.com';
 }
@@ -916,20 +916,20 @@ function getMainAppUrl() {
 // Check authentication before redirecting (prevents redirect if already authenticated)
 async function checkAuthBeforeRedirect() {
   console.log('Checking authentication before redirect...');
-  
+
   // Show loading in header
   const authLoading = document.getElementById('authLoading');
   const authNotAuthenticated = document.getElementById('authNotAuthenticated');
   if (authLoading) authLoading.classList.remove('hidden');
   if (authNotAuthenticated) authNotAuthenticated.classList.add('hidden');
-  
+
   try {
     // Check authentication
     const authResult = await checkBackendAuthentication();
-    
+
     // Update header
     await updateAuthStatus();
-    
+
     if (authResult.authenticated) {
       console.log('✅ User is already authenticated! Updating header and proceeding with calendar generation');
       // Close modal if open
@@ -938,11 +938,11 @@ async function checkAuthBeforeRedirect() {
       generateCalendar();
       return;
     }
-    
+
     // User is NOT authenticated - proceed with redirect
     console.log('❌ User not authenticated, redirecting to signup...');
     redirectToSignupPage();
-    
+
   } catch (error) {
     console.error('Error checking auth before redirect:', error);
     // On error, try redirect anyway (user might need to sign in)
@@ -954,16 +954,16 @@ async function checkAuthBeforeRedirect() {
 function redirectToSignupPage() {
   // Store intent to generate calendar after login
   localStorage.setItem('stratbot_pending_calendar', 'true');
-  
+
   // Store current URL for redirect back (remove any existing action params to avoid duplicates)
   const currentUrl = new URL(window.location.href);
   currentUrl.searchParams.delete('action'); // Remove action param if present
   const cleanUrl = currentUrl.toString();
   localStorage.setItem('stratbot_return_url', cleanUrl);
-  
+
   // Get main app URL (auto-detects localhost for development)
   const mainAppUrl = getMainAppUrl();
-  
+
   // Redirect to signup with return URL parameter (SAME TAB - no new window)
   const signupUrl = `${mainAppUrl}/signup?returnUrl=${encodeURIComponent(cleanUrl)}&action=calendar`;
   window.location.href = signupUrl; // Same tab navigation
@@ -982,47 +982,47 @@ async function updateAuthStatus() {
   const userName = document.getElementById('userName');
   const userEmail = document.getElementById('userEmail');
   const userAvatar = document.getElementById('userAvatar');
-  
+
   // Show loading state
   if (authLoading) authLoading.classList.remove('hidden');
   if (authAuthenticated) authAuthenticated.classList.add('hidden');
   if (authNotAuthenticated) authNotAuthenticated.classList.add('hidden');
-  
+
   try {
     const authResult = await checkBackendAuthentication();
-    
+
     // Hide loading
     if (authLoading) authLoading.classList.add('hidden');
-    
+
     if (authResult.authenticated && authResult.profile) {
       // User is authenticated - show user info
       if (authAuthenticated) authAuthenticated.classList.remove('hidden');
       if (authNotAuthenticated) authNotAuthenticated.classList.add('hidden');
-      
+
       // Update user info
       const profile = authResult.profile;
       const name = profile.full_name || profile.username || profile.email?.split('@')[0] || 'User';
       const email = profile.email || '';
       const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-      
+
       if (userName) userName.textContent = name;
       if (userEmail) userEmail.textContent = email;
       if (userAvatar) userAvatar.textContent = initials;
-      
+
       // Store auth state globally for calendar generation
       window._userAuthenticated = true;
       window._userProfile = profile;
-      
+
       console.log('✅ User authenticated:', name, email);
     } else {
       // User is not authenticated - show sign in button
       if (authAuthenticated) authAuthenticated.classList.add('hidden');
       if (authNotAuthenticated) authNotAuthenticated.classList.remove('hidden');
-      
+
       // Clear auth state
       window._userAuthenticated = false;
       window._userProfile = null;
-      
+
       console.log('❌ User not authenticated');
     }
   } catch (error) {
@@ -1031,7 +1031,7 @@ async function updateAuthStatus() {
     if (authLoading) authLoading.classList.add('hidden');
     if (authAuthenticated) authAuthenticated.classList.add('hidden');
     if (authNotAuthenticated) authNotAuthenticated.classList.remove('hidden');
-    
+
     window._userAuthenticated = false;
     window._userProfile = null;
   }
@@ -1043,25 +1043,25 @@ function extractTokenFromUrl() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    
+
     if (token) {
       console.log('✅ Found authentication token in URL, storing in localStorage...');
       // Store token in localStorage for future use
       localStorage.setItem('stratbot_auth_token', token);
-      
+
       // Clean up URL by removing token parameter (for security and cleaner URLs)
       urlParams.delete('token');
-      const newUrl = window.location.pathname + 
-                    (urlParams.toString() ? '?' + urlParams.toString() : '') + 
+      const newUrl = window.location.pathname +
+                    (urlParams.toString() ? '?' + urlParams.toString() : '') +
                     window.location.hash;
-      
+
       // Update URL without reloading page (using history API)
       window.history.replaceState({}, '', newUrl);
-      
+
       console.log('🔒 Token stored and URL cleaned');
       return token;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error extracting token from URL:', error);
@@ -1072,11 +1072,11 @@ function extractTokenFromUrl() {
 async function checkBackendAuthentication() {
   try {
     console.log('🔍 Starting authentication check...');
-    
+
     // Try to get Supabase session token from cookies or localStorage
     let authToken = null;
     let tokenSource = null;
-    
+
     // Method 0: Check for token passed via URL (from Next.js app redirect)
     // This should be called first to extract token from URL if present
     console.log('🔗 Checking for token in URL...');
@@ -1086,7 +1086,7 @@ async function checkBackendAuthentication() {
       tokenSource = 'url-parameter';
       console.log('✅ Found token in URL parameter');
     }
-    
+
     // Method 0.5: Check localStorage for stored token (from URL or previous session)
     // This is checked after URL extraction, so stored token takes precedence if URL token was just extracted
     if (!authToken) {
@@ -1098,21 +1098,21 @@ async function checkBackendAuthentication() {
         console.log('✅ Found stored token in localStorage');
       }
     }
-    
+
     // Method 1: Check cookies for Supabase auth token
     console.log('📋 Checking cookies...');
     const cookies = document.cookie.split(';');
     console.log('All cookies:', cookies.map(c => c.trim().substring(0, 80)));
-    
+
     for (let cookie of cookies) {
       const trimmed = cookie.trim();
       // Look for Supabase auth cookies - they can have various formats:
       // - sb-<project-ref>-auth-token
       // - sb-<project-ref>-auth-token-code-verifier
       // - Any cookie with 'sb-' and 'auth' in the name
-      const isSupabaseCookie = trimmed.includes('sb-') && 
+      const isSupabaseCookie = trimmed.includes('sb-') &&
                                 (trimmed.includes('auth') || trimmed.includes('session'));
-      
+
       if (isSupabaseCookie) {
         console.log('Found Supabase cookie:', trimmed.substring(0, 100));
         const parts = trimmed.split('=');
@@ -1120,7 +1120,7 @@ async function checkBackendAuthentication() {
           try {
             const cookieName = parts[0].trim();
             const cookieValue = decodeURIComponent(parts.slice(1).join('='));
-            
+
             // Try parsing as JSON (most common format)
             try {
               const parsed = JSON.parse(cookieValue);
@@ -1151,7 +1151,7 @@ async function checkBackendAuthentication() {
         }
       }
     }
-    
+
     // Method 2: Check localStorage for Supabase tokens
     if (!authToken) {
       console.log('📦 Checking localStorage...');
@@ -1197,7 +1197,7 @@ async function checkBackendAuthentication() {
         }
       }
     }
-    
+
     // Method 3: Check for Redux persisted state (if available)
     if (!authToken) {
       console.log('🔄 Checking for Redux persisted state...');
@@ -1219,10 +1219,10 @@ async function checkBackendAuthentication() {
         console.log('Error checking Redux state:', e);
       }
     }
-    
+
     if (!authToken) {
       console.log('❌ No authentication token found in any location');
-      const relevantKeys = Object.keys(localStorage).filter(k => 
+      const relevantKeys = Object.keys(localStorage).filter(k =>
         k.includes('sb') || k.includes('supabase') || k.includes('auth') || k.includes('persist')
       );
       console.log('Relevant localStorage keys:', relevantKeys);
@@ -1230,20 +1230,20 @@ async function checkBackendAuthentication() {
       console.log('Current origin:', window.location.origin);
       console.log('Main app URL:', getMainAppUrl());
       console.log('⚠️ Note: If Next.js app is on a different port, cookies/localStorage won\'t be shared');
-      
+
       return { authenticated: false, message: 'No authentication token found' };
     }
-    
+
     console.log('🔑 Token found from:', tokenSource);
     console.log('Token preview:', authToken.substring(0, 50) + '...');
-    
+
     // Store token in localStorage for future API calls (if not already stored from URL)
     // This ensures we can use it in Authorization headers
     if (tokenSource !== 'url-parameter' && tokenSource !== 'localStorage-stored') {
       localStorage.setItem('stratbot_auth_token', authToken);
       console.log('💾 Stored token in localStorage for future API calls');
     }
-    
+
     // Verify token with backend
     console.log('🌐 Verifying token with backend...');
     const response = await fetch('/verify-auth', {
@@ -1253,17 +1253,17 @@ async function checkBackendAuthentication() {
       },
       body: JSON.stringify({ token: authToken }),
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Backend verification failed:', response.status, errorText);
       return { authenticated: false, message: `Authentication verification failed: ${response.status}` };
     }
-    
+
     const data = await response.json();
     console.log('✅ Backend verification result:', data);
     return { authenticated: data.authenticated || false, profile: data.profile };
-    
+
   } catch (error) {
     console.error('❌ Error checking backend authentication:', error);
     return { authenticated: false, message: error.message };
@@ -1277,10 +1277,10 @@ async function generateCalendar() {
     btn.disabled = true;
     btn.textContent = "Checking authentication...";
   }
-  
+
   // STEP 1: Check authentication (use cached state if available, otherwise check backend)
   let authResult;
-  
+
   // First check if we have cached auth state from header
   if (window._userAuthenticated !== undefined) {
     console.log('Using cached authentication state from header');
@@ -1297,27 +1297,27 @@ async function generateCalendar() {
       profile: window._userProfile || null
     };
   }
-  
+
   console.log('Authentication check result:', authResult);
-  
+
   // CONDITION 1: User is NOT authenticated → Show EngagementModal popup
   if (!authResult.authenticated) {
     console.log('User not authenticated - showing engagement modal');
-    
+
     // Re-enable button
     if (btn) {
       btn.disabled = false;
       btn.textContent = "📅 Generate Personalized Calendar";
     }
-    
+
     // Show engagement modal popup (user can signup or close)
     showEngagementModal();
     return; // Stop here - do NOT generate calendar
   }
-  
+
   // CONDITION 2: User IS authenticated → Proceed with calendar generation
   console.log('User is authenticated - proceeding with calendar generation');
-  
+
   // Check if profile is completed (if not, redirect to onboarding first)
   if (authResult.profile && authResult.profile.onboarding_completed === false) {
     console.log('Profile not completed - redirecting to onboarding');
@@ -1331,13 +1331,13 @@ async function generateCalendar() {
     window.location.href = onboardingUrl;
     return;
   }
-  
+
   // User is authenticated AND profile is completed → Make LLM call to generate calendar
   console.log('User authenticated and profile complete - generating calendar via LLM');
   if (btn) {
     btn.textContent = "Generating calendar...";
   }
-  
+
   // Get strategy data from localStorage
   const strategyDataStr = localStorage.getItem('stratbot_strategy_data');
   if (!strategyDataStr) {
@@ -1348,7 +1348,7 @@ async function generateCalendar() {
     }
     return;
   }
-  
+
   let strategyData;
   try {
     strategyData = JSON.parse(strategyDataStr);
@@ -1360,7 +1360,7 @@ async function generateCalendar() {
     }
     return;
   }
-  
+
   // Build calendar request payload
   // Validate duration_days exists and is valid
   const durationDays = strategyData.duration_days;
@@ -1373,7 +1373,7 @@ async function generateCalendar() {
     }
     return;
   }
-  
+
   const calendarPayload = {
     strategy_text: strategyData.strategy_text,
     platforms: strategyData.platforms,
@@ -1381,15 +1381,15 @@ async function generateCalendar() {
     goal: strategyData.goal,
     audience: strategyData.audience
   };
-  
+
   // Log for debugging
   console.log('Generating calendar for', durationDays, 'days');
   console.log('Calendar payload:', { ...calendarPayload, strategy_text: calendarPayload.strategy_text?.substring(0, 100) + '...' });
-  
+
   // Show loading state in result area
   const resultArea = document.getElementById("resultArea");
   const originalContent = resultArea ? resultArea.innerHTML : '';
-  
+
   if (resultArea) {
     resultArea.innerHTML = `
       <div class="text-center py-12 text-gray-500">
@@ -1399,7 +1399,7 @@ async function generateCalendar() {
       </div>
     `;
   }
-  
+
   // Get authentication token for the API call
   const authToken = localStorage.getItem('stratbot_auth_token');
   if (!authToken) {
@@ -1416,7 +1416,7 @@ async function generateCalendar() {
     showEngagementModal();
     return;
   }
-  
+
   try {
     const response = await fetch('/generate-calendar', {
       method: 'POST',
@@ -1426,7 +1426,7 @@ async function generateCalendar() {
       },
       body: JSON.stringify(calendarPayload),
     });
-    
+
     if (!response.ok) {
       // Handle 401 Unauthorized - token expired or invalid
       if (response.status === 401) {
@@ -1439,20 +1439,20 @@ async function generateCalendar() {
         showEngagementModal();
         return;
       }
-      
+
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
       throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     renderCalendarResult(data);
-    
+
     // Clear pending calendar flag
     localStorage.removeItem('stratbot_pending_calendar');
-    
+
   } catch (error) {
     console.error('Error generating calendar:', error);
-    
+
     if (resultArea) {
       resultArea.innerHTML = `
         <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -1469,7 +1469,7 @@ async function generateCalendar() {
         </div>
       `;
     }
-    
+
     showNotification(`Error: ${error.message}`, "error");
   } finally {
     if (btn) {
@@ -1483,24 +1483,24 @@ async function generateCalendar() {
 function renderCalendarResult(data) {
   const area = document.getElementById("resultArea");
   if (!area) return;
-  
+
   const calendar = data.calendar_text || data.calendar || "No calendar content returned.";
-  
+
   // Store original markdown text
   area.dataset.originalMarkdown = calendar;
   // Store calendar data for PDF generation
   area.dataset.calendarData = JSON.stringify(data);
-  
+
   // Parse markdown and render
   const formattedCalendar = renderMarkdown(calendar);
-  
-  const rawPrompt = data.raw_prompt 
+
+  const rawPrompt = data.raw_prompt
     ? `<details class="mt-4">
         <summary class="cursor-pointer text-gray-400 hover:text-gray-300 text-sm mb-2">View Prompt (Debug)</summary>
         <pre class="mt-2 text-xs bg-gray-50 p-3 rounded overflow-auto max-h-48">${escapeHtml(data.raw_prompt)}</pre>
-       </details>` 
+       </details>`
     : "";
-  
+
   // Get strategy data for context
   const strategyDataStr = localStorage.getItem('stratbot_strategy_data');
   let strategyContext = '';
@@ -1517,7 +1517,7 @@ function renderCalendarResult(data) {
       // Ignore parse errors
     }
   }
-  
+
   area.innerHTML = `
     <div class="space-y-6">
       <!-- Header Section -->
@@ -1530,18 +1530,18 @@ function renderCalendarResult(data) {
           <div class="text-4xl">📆</div>
         </div>
       </div>
-      
+
       ${strategyContext}
-      
+
       <!-- Calendar Content -->
       <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6" id="calendarContent">
         <div class="result-content markdown-content prose prose-lg max-w-none">
           ${formattedCalendar}
         </div>
       </div>
-      
+
       ${rawPrompt}
-      
+
       <!-- Action Buttons -->
       <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Download & Share</h3>
@@ -1559,10 +1559,10 @@ function renderCalendarResult(data) {
       </div>
     </div>
   `;
-  
+
   // Restore the original markdown data attribute
   area.dataset.originalMarkdown = calendar;
-  
+
   // Scroll to top of result area
   area.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1570,7 +1570,7 @@ function renderCalendarResult(data) {
 function copyCalendar() {
   const resultArea = document.getElementById("resultArea");
   let text = '';
-  
+
   if (resultArea && resultArea.dataset.originalMarkdown) {
     text = resultArea.dataset.originalMarkdown;
   } else {
@@ -1579,7 +1579,7 @@ function copyCalendar() {
       text = resultContent.textContent || resultContent.innerText;
     }
   }
-  
+
   if (text) {
     navigator.clipboard.writeText(text).then(() => {
       showNotification("Calendar copied to clipboard!", "info");
@@ -1594,7 +1594,7 @@ function copyCalendar() {
 function downloadCalendar() {
   const resultArea = document.getElementById("resultArea");
   let text = '';
-  
+
   if (resultArea && resultArea.dataset.originalMarkdown) {
     text = resultArea.dataset.originalMarkdown;
   } else {
@@ -1603,7 +1603,7 @@ function downloadCalendar() {
       text = resultContent.textContent || resultContent.innerText;
     }
   }
-  
+
   if (text) {
     const blob = new Blob([text], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -1627,11 +1627,11 @@ async function downloadCalendarPDF() {
     showNotification("No calendar content found to download.", "error");
     return;
   }
-  
+
   // Get calendar data from stored data attribute or try to extract from DOM
   let calendarText = '';
   let calendarData = null;
-  
+
   // Try to get from data attribute first
   if (resultArea.dataset.calendarData) {
     try {
@@ -1641,12 +1641,12 @@ async function downloadCalendarPDF() {
       console.warn('Failed to parse calendar data:', e);
     }
   }
-  
+
   // Fallback: get from original markdown
   if (!calendarText && resultArea.dataset.originalMarkdown) {
     calendarText = resultArea.dataset.originalMarkdown;
   }
-  
+
   // Last resort: try to extract from DOM
   if (!calendarText) {
     const calendarContent = document.getElementById("calendarContent");
@@ -1654,24 +1654,24 @@ async function downloadCalendarPDF() {
       calendarText = calendarContent.textContent || calendarContent.innerText || '';
     }
   }
-  
+
   if (!calendarText || !calendarText.trim()) {
     showNotification("Calendar content is empty. Please generate a calendar first.", "error");
     return;
   }
-  
+
   // Get authentication token
   const authToken = localStorage.getItem('stratbot_auth_token');
   if (!authToken) {
     showNotification("Authentication required. Please sign in to download PDF.", "error");
     return;
   }
-  
+
   // Get strategy data for context (duration, platforms)
   const strategyDataStr = localStorage.getItem('stratbot_strategy_data');
   let durationDays = null;
   let platforms = null;
-  
+
   if (strategyDataStr) {
     try {
       const strategyData = JSON.parse(strategyDataStr);
@@ -1681,10 +1681,10 @@ async function downloadCalendarPDF() {
       console.warn('Failed to parse strategy data:', e);
     }
   }
-  
+
   // Show loading notification
   showNotification("Generating PDF... This may take a moment.", "info");
-  
+
   try {
     // Prepare request payload
     const payload = {
@@ -1693,7 +1693,7 @@ async function downloadCalendarPDF() {
       duration_days: durationDays,
       platforms: platforms
     };
-    
+
     // Make request to server
     const response = await fetch('/download-calendar-pdf', {
       method: 'POST',
@@ -1703,7 +1703,7 @@ async function downloadCalendarPDF() {
       },
       body: JSON.stringify(payload)
     });
-    
+
     if (!response.ok) {
       // Handle 401 Unauthorized
       if (response.status === 401) {
@@ -1711,14 +1711,14 @@ async function downloadCalendarPDF() {
         showNotification('Your session has expired. Please sign in again.', "error");
         return;
       }
-      
+
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
       throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     // Get PDF blob
     const blob = await response.blob();
-    
+
     // Create download link
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1726,13 +1726,13 @@ async function downloadCalendarPDF() {
     a.download = `content-calendar-${new Date().toISOString().split("T")[0]}.pdf`;
     document.body.appendChild(a);
     a.click();
-    
+
     // Cleanup
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    
+
     showNotification("Calendar PDF downloaded successfully!", "success");
-    
+
   } catch (error) {
     console.error('PDF download error:', error);
     showNotification(`Failed to download PDF: ${error.message}`, "error");
@@ -1772,27 +1772,27 @@ function restoreStrategyResponse() {
   if (hasStrategyResponse !== 'true') {
     return false;
   }
-  
+
   const strategyDataStr = localStorage.getItem('stratbot_strategy_data');
   if (!strategyDataStr) {
     localStorage.removeItem('stratbot_has_strategy_response');
     return false;
   }
-  
+
   try {
     const strategyData = JSON.parse(strategyDataStr);
-    
+
     // Check if we have the full response data
     if (strategyData.fullResponse) {
       console.log('Restoring strategy response from localStorage');
-      
+
       // Restore wizard state (platforms, form data) if available
       if (strategyData.platforms && Array.isArray(strategyData.platforms)) {
         state.platforms = new Set(strategyData.platforms);
         refreshChips();
         console.log('Restored selected platforms:', Array.from(state.platforms));
       }
-      
+
       // Restore form values if available
       if (strategyData.goal) {
         const goalEl = document.getElementById("goal");
@@ -1806,17 +1806,17 @@ function restoreStrategyResponse() {
         const audienceEl = document.getElementById("audience");
         if (audienceEl) audienceEl.value = strategyData.audience;
       }
-      
+
       // Ensure we're on step 4 (should already be there from initialization, but double-check)
       if (state.step !== 4) {
         state.allowStep4 = true;
         state.step = 4;
         showStep(4);
       }
-      
+
       // Restore the strategy response display
       renderResult(strategyData.fullResponse);
-      
+
       return true;
     }
   } catch (e) {
@@ -1824,7 +1824,7 @@ function restoreStrategyResponse() {
     localStorage.removeItem('stratbot_has_strategy_response');
     localStorage.removeItem('stratbot_strategy_data');
   }
-  
+
   return false;
 }
 
@@ -1836,17 +1836,17 @@ function checkPendingCalendarGeneration() {
     return;
   }
   window._calendarCheckExecuted = true;
-  
+
   // Check URL parameters for action=calendar
   const urlParams = new URLSearchParams(window.location.search);
   const action = urlParams.get('action');
-  
+
   // Also check localStorage for pending calendar flag
   const pendingCalendar = localStorage.getItem('stratbot_pending_calendar');
-  
+
   if (action === 'calendar' || pendingCalendar === 'true') {
     console.log('Step 9: Pending calendar generation detected after onboarding completion, checking authentication...');
-    
+
     // Step 2: Check authentication via backend
     checkBackendAuthentication().then(authResult => {
       if (!authResult.authenticated) {
@@ -1862,7 +1862,7 @@ function checkPendingCalendarGeneration() {
       window._calendarCheckExecuted = false; // Reset flag for retry
       return;
       }
-      
+
       // Check profile completion (Step 7 & 8 should be done)
       if (authResult.profile && authResult.profile.onboarding_completed === false) {
         console.log('Profile still not completed, redirecting to onboarding');
@@ -1876,12 +1876,12 @@ function checkPendingCalendarGeneration() {
         window.location.href = onboardingUrl;
         return;
       }
-      
+
       console.log('User is authenticated and profile completed, checking for strategy data...');
-      
+
       // User is authenticated, check if we have strategy data
       const strategyData = localStorage.getItem('stratbot_strategy_data');
-    
+
     if (!strategyData) {
       // No strategy data, clear the flag
       console.log('No strategy data found');
@@ -1894,12 +1894,12 @@ function checkPendingCalendarGeneration() {
       }
       return;
     }
-    
+
     console.log('Strategy data found, restoring strategy response first...');
-    
+
     // FIRST: Restore the strategy response so user can see it
     const restored = restoreStrategyResponse();
-    
+
     if (!restored) {
       // If restoration failed, try to show strategy from stored data
       const strategyData = JSON.parse(strategyDataStr);
@@ -1909,25 +1909,25 @@ function checkPendingCalendarGeneration() {
           state.allowStep4 = true;
           showStep(4);
         }
-        
+
         // Create a mock response object to render
         const mockResponse = {
           strategy_text: strategyData.strategy_text,
           raw_prompt: strategyData.raw_prompt || null
         };
-        
+
         setTimeout(() => {
           renderResult(mockResponse);
         }, 500);
       }
     }
-    
+
     // Strategy data exists - ensure we're on step 4
     if (state.step !== 4) {
       // Navigate to step 4 first
       state.allowStep4 = true;
       showStep(4);
-      
+
       // Wait for step 4 to render and strategy to be restored, then trigger calendar generation (Step 9)
       setTimeout(() => {
         localStorage.removeItem('stratbot_pending_calendar');
@@ -1942,13 +1942,13 @@ function checkPendingCalendarGeneration() {
         generateCalendar();
       }, 1500); // Increased delay to ensure strategy is restored first
     }
-    
+
       // Clean up URL parameters immediately to prevent loops
       if (action) {
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
       }
-      
+
       // Update auth status in header after authentication check
       updateAuthStatus();
     }).catch(error => {
@@ -1956,7 +1956,7 @@ function checkPendingCalendarGeneration() {
       showNotification("Error verifying authentication. Please try again.", "error");
       localStorage.removeItem('stratbot_pending_calendar');
       window._calendarCheckExecuted = false;
-      
+
       // Update auth status in header even on error
       updateAuthStatus();
     });
@@ -1970,39 +1970,39 @@ function checkPendingCalendarGeneration() {
 document.addEventListener("DOMContentLoaded", () => {
   // Extract token from URL first (if present from redirect)
   extractTokenFromUrl();
-  
+
   // Update authentication status in header (runs immediately)
   updateAuthStatus();
-  
+
   // Refresh auth status periodically to keep it updated
   setInterval(() => {
     updateAuthStatus();
   }, 5 * 60 * 1000); // Every 5 minutes
-  
+
   // Check for stored strategy FIRST before showing any step
   // This prevents the flash of Step 1 when refreshing on Step 4
   const hasStrategyFlag = localStorage.getItem('stratbot_has_strategy_response');
-  
+
   if (hasStrategyFlag === 'true') {
     // Strategy exists - immediately hide Step 1 and show Step 4
     state.allowStep4 = true;
     state.step = 4;
-    
+
     // Hide all steps immediately
     steps.forEach((step) => {
       step.classList.remove("active");
     });
-    
+
     // Show step 4 immediately
     const step4 = steps.find(s => Number(s.dataset.step) === 4);
     if (step4) {
       step4.classList.add("active");
     }
-    
+
     // Update progress and indicators
     updateProgress();
     updateStepIndicators();
-    
+
     // Now restore strategy content
     const restored = restoreStrategyResponse();
     if (!restored) {
@@ -2020,10 +2020,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStepIndicators();
     // Step 1 is already active in HTML, so we don't need to call showStep(1)
   }
-  
+
   // Check for pending calendar generation (after signup/onboarding)
   checkPendingCalendarGeneration();
-  
+
   // Also refresh auth status after a short delay (in case user just signed in)
   setTimeout(() => {
     updateAuthStatus();
@@ -2034,17 +2034,17 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("pageshow", (event) => {
   // Extract token from URL if present (in case of redirect)
   extractTokenFromUrl();
-  
+
   // event.persisted is true when page is loaded from cache (back/forward navigation)
   if (event.persisted) {
     console.log('Page loaded from cache, checking for strategy to restore...');
-    
+
     const hasStrategyFlag = localStorage.getItem('stratbot_has_strategy_response');
     if (hasStrategyFlag === 'true') {
       // Strategy exists - show Step 4
       state.allowStep4 = true;
       state.step = 4;
-      
+
       // Hide all steps and show Step 4
       steps.forEach((step) => {
         step.classList.remove("active");
@@ -2053,14 +2053,14 @@ window.addEventListener("pageshow", (event) => {
       if (step4) {
         step4.classList.add("active");
       }
-      
+
       updateProgress();
       updateStepIndicators();
-      
+
       // Restore strategy content
       restoreStrategyResponse();
     }
-    
+
     // Check for pending calendar generation
     checkPendingCalendarGeneration();
   }

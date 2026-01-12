@@ -66,7 +66,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 body_str = str(exc.body)
         except Exception:
             body_str = "<unable to decode body>"
-    
+
     return JSONResponse(
         status_code=422,
         content={
@@ -92,11 +92,11 @@ async def global_exception_handler(request: Request, exc: Exception):
             "method": request.method,
         }
     )
-    
+
     # Log full traceback
     tb_str = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     logger.debug(f"Full traceback:\n{tb_str}")
-    
+
     return JSONResponse(
         status_code=500,
         content={

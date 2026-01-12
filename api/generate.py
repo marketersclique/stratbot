@@ -16,7 +16,7 @@ async def generate_strategy(payload: StrategyRequest):
     Generate marketing strategy using OpenRouter LLM API.
     """
     logger.info(f"Received strategy request: platforms={payload.platforms}, duration={payload.duration_days} days")
-    
+
     settings = get_settings()
     service = StrategyService(settings)
 
@@ -62,7 +62,7 @@ async def generate_calendar(
     """
     Generate personalized content calendar based on a strategy.
     Requires authentication via JWT token in Authorization header.
-    
+
     The token is validated using Supabase, and user information is extracted
     from the validated token. The route will return 401 if the token is missing,
     invalid, or expired.
@@ -71,7 +71,7 @@ async def generate_calendar(
         f"Received calendar request from user {user.user_id} ({user.email}): "
         f"platforms={payload.platforms}, duration={payload.duration_days} days"
     )
-    
+
     settings = get_settings()
     service = StrategyService(settings)
 

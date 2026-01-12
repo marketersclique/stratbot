@@ -28,7 +28,7 @@ async def verify_auth(payload: VerifyAuthRequest):
     """
     try:
         settings = get_settings()
-        
+
         # If Supabase is not configured, do basic token validation
         if not settings.supabase_url or not settings.supabase_key:
             logger.warning("Supabase not configured, performing basic token validation")
@@ -45,24 +45,24 @@ async def verify_auth(payload: VerifyAuthRequest):
                     authenticated=False,
                     message="Invalid token format"
                 )
-        
+
         # Full Supabase verification
         try:
             from supabase import create_client, Client
-            
+
             supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
-            
+
             # Verify token by getting user
             user_response = supabase.auth.get_user(payload.token)
-            
+
             if not user_response or not user_response.user:
                 return VerifyAuthResponse(
                     authenticated=False,
                     message="Invalid or expired token"
                 )
-            
+
             user = user_response.user
-            
+
             # Get user profile from database
             profile = None
             try:
@@ -72,13 +72,13 @@ async def verify_auth(payload: VerifyAuthRequest):
             except Exception as profile_error:
                 logger.warning(f"Could not fetch profile: {profile_error}")
                 # Continue without profile - frontend will handle
-            
+
             return VerifyAuthResponse(
                 authenticated=True,
                 profile=profile,
                 message="Authentication verified"
             )
-            
+
         except ImportError:
             logger.error("Supabase Python client not installed. Install with: pip install supabase")
             # Fallback to basic validation
@@ -99,7 +99,7 @@ async def verify_auth(payload: VerifyAuthRequest):
                 authenticated=False,
                 message=f"Authentication verification failed: {str(supabase_error)}"
             )
-            
+
     except Exception as exc:
         logger.error(f"Error in verify_auth: {exc}", exc_info=True)
         raise HTTPException(
