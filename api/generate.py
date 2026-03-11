@@ -7,16 +7,16 @@ from app.services.strategy_service import StrategyService
 from app.dependencies.auth import get_current_user, AuthenticatedUser
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/api/strategy")
 
 
-@router.post("/generate-strategy", response_model=StrategyResponse)
+@router.post("/generate", response_model=StrategyResponse)
 async def generate_strategy(payload: StrategyRequest):
     """
     Generate marketing strategy using OpenRouter LLM API.
     """
     logger.info(f"Received strategy request: platforms={payload.platforms}, duration={payload.duration_days} days")
-    
+
     settings = get_settings()
     service = StrategyService(settings)
 
@@ -62,7 +62,7 @@ async def generate_calendar(
     """
     Generate personalized content calendar based on a strategy.
     Requires authentication via JWT token in Authorization header.
-    
+
     The token is validated using Supabase, and user information is extracted
     from the validated token. The route will return 401 if the token is missing,
     invalid, or expired.
