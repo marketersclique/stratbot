@@ -1,32 +1,29 @@
-"""
-Configuration and environment loading.
-
-Rules:
-- .env is loaded exactly once here.
-- No clients are initialized at import time; we only read configuration.
-"""
-
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-# Load environment variables once on import
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_path = BASE_DIR / ".env"
+
+load_dotenv(dotenv_path=env_path, override=True)
+
 
 
 class Settings(BaseModel):
     app_name: str = "Clique Strategist API"
-    aws_access_key_id: Optional[str] = Field(default=None, alias="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: Optional[str] = Field(default=None, alias="AWS_SECRET_ACCESS_KEY")
-    aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
-    bedrock_model_id: str = Field(
-        default="anthropic.claude-3-haiku-20240307-v1:0",
-        alias="BEDROCK_MODEL_ID",
+    openrouter_api_key: Optional[str] = Field(default=None, alias="OPENROUTER_API_KEY")
+    openrouter_model: str = Field(
+        default="openai/gpt-4o-mini",
+        alias="OPENROUTER_MODEL",
     )
-    # Raise the default token limit so responses are not truncated mid-output.
+    openrouter_site_url: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_URL")
+    openrouter_site_name: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_NAME")
+    supabase_url: Optional[str] = Field(default=None, alias="SUPABASE_URL")
+    supabase_key: Optional[str] = Field(default=None, alias="SUPABASE_ANON_KEY")
     max_tokens: int = 4000
     temperature: float = 0.6
 
@@ -38,8 +35,16 @@ class Settings(BaseModel):
 @lru_cache
 def get_settings() -> Settings:
     """
-    Cached settings accessor so config is read once per process.
+    Get settings instance, reading from environment variables.
+    Pydantic will automatically read from os.environ when using Field aliases.
     """
-    return Settings(**{k: v for k, v in os.environ.items()})
-
-
+    # Create dict from environment variables for explicit population
+    env_vars = {
+        "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY"),
+        "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
+        "OPENROUTER_SITE_URL": os.getenv("OPENROUTER_SITE_URL"),
+        "OPENROUTER_SITE_NAME": os.getenv("OPENROUTER_SITE_NAME"),
+        "SUPABASE_URL": os.getenv("SUPABASE_URL"),
+        "SUPABASE_ANON_KEY": os.getenv("SUPABASE_ANON_KEY"),
+    }
+    return Settings(**env_vars)
