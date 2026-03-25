@@ -57,22 +57,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     Global exception handler for Pydantic validation errors.
     Returns detailed field-level validation errors for 422 responses.
     """
-    body_str = None
-    if exc.body:
-        try:
-            if isinstance(exc.body, bytes):
-                body_str = exc.body.decode("utf-8")
-            else:
-                body_str = str(exc.body)
-        except Exception:
-            body_str = "<unable to decode body>"
-    
+    # Pydantic v2 stores the raw ValueError inside ctx['error'], which is not
+    # JSON-serializable. Sanitize ctx values to strings before returning.
+    sanitized_errors = []
+    for error in exc.errors():
+        sanitized = {k: v for k, v in error.items()}
+        if "ctx" in sanitized and isinstance(sanitized["ctx"], dict):
+            sanitized["ctx"] = {k: str(v) for k, v in sanitized["ctx"].items()}
+        sanitized_errors.append(sanitized)
+
     return JSONResponse(
         status_code=422,
         content={
-            "detail": exc.errors(),
-            "body": body_str,
-            "message": "Request validation failed. Check 'detail' field for specific field errors.",
+            "error": "Validation Error",
+            "details": sanitized_errors,
+            "message": "Request validation failed. Check 'details' field for specific field errors.",
         },
     )
 
