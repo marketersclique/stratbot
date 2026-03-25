@@ -156,7 +156,7 @@ Output instructions
 - Follow the mandatory output structure exactly (all 11 sections, in order).
 - Never guarantee exact numbers; always provide ranges.
 - Be specific to the selected platforms; if multi-platform, include integrated system plus platform-specific tactics.
-- Provide 30/60/90-day phased plan (fold later checkpoints into stretch goals if duration is shorter).
+- CRITICAL: The Phased Strategy Plan (section 5) MUST cover exactly {payload.duration_days} days — no more, no less. Divide all {payload.duration_days} days into logical phases and explicitly state the day ranges for each phase (e.g. "Phase 1: Days 1–7"). Every phase range must add up to exactly {payload.duration_days} days total.
 - Keep sections concise, scannable, and execution-ready.
 - Do not mix planner content unless explicitly asked.
 """
@@ -213,9 +213,12 @@ Context
 - Audience/niche: {audience}
 
 Output instructions
-- Generate a detailed weekly and day-wise content calendar for ALL {payload.duration_days} days
+- CRITICAL: You MUST generate content for EXACTLY {payload.duration_days} days — Day 1 through Day {payload.duration_days}. This is non-negotiable.
+- CRITICAL: Do NOT stop early. Do NOT summarize remaining days. Do NOT use "continue this pattern for remaining days". Write out every single day explicitly.
+- CRITICAL: Before you finish, count your days. If you have not reached Day {payload.duration_days}, keep going until you do.
+- Generate a detailed weekly and day-wise content calendar covering all {payload.duration_days} days ({weeks} weeks)
 - Follow the mandatory output structure exactly
-- For EACH DAY, provide:
+- For EACH DAY (Day 1 to Day {payload.duration_days}), provide:
   * Platform(s) to post on
   * Content Type (Reel, Post, Story, Carousel, etc.)
   * Specific Content Idea (be creative and specific)
@@ -230,7 +233,7 @@ Output instructions
 - Include emojis/icons for visual hierarchy and better readability
 - Make it actionable and ready to execute
 
-IMPORTANT: Generate content for EVERY SINGLE DAY ({payload.duration_days} days total). Do not skip any days.
+MANDATORY: The calendar must contain exactly {payload.duration_days} numbered days (Day 1 through Day {payload.duration_days}). Any response that skips or truncates days is considered incomplete and incorrect.
 """
             
             logger.info(f"Generating calendar for {weeks} weeks across {platforms}")

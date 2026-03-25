@@ -47,7 +47,7 @@ MANDATORY OUTPUT STRUCTURE (must include all sections, must be in beautiful form
 2. One-Line Strategy Summary
 3. Strategy Score (0–100), Difficulty, Growth Potential + reasoning
 4. Red Flags (if present)
-5. 30/60/90-Day Phased Plan
+5. Phased Strategy Plan (aligned to the requested duration)
 6. Multi-Platform Strategy (only if 2+ platforms selected)
    - Combined system
    - Platform-specific tactics (only selected platforms)
@@ -144,7 +144,10 @@ MANDATORY OUTPUT STRUCTURE (must include all sections, in beautiful markdown for
    - Posting schedule reminders
 
 STRICT RULES
-- Generate content for EVERY SINGLE DAY requested - do not skip any days
+- CRITICAL: You MUST generate content for EXACTLY the number of days specified in the user's request. Not fewer, not more. If the user requests 15 days, generate exactly 15 days. If 30 days, exactly 30 days. Count each day as you go.
+- CRITICAL: Before finishing, verify your output covers Day 1 through Day [N] where N is the exact number requested. If any days are missing, add them before stopping.
+- NEVER truncate or summarize remaining days with phrases like "continue this pattern..." or "repeat for remaining days..." — every single day must be fully written out
+- NEVER skip any day in the sequence — every day from Day 1 to Day N must appear explicitly
 - Never generate generic content ideas - be specific and creative
 - Always provide specific hooks and CTAs for each day
 - Include platform-specific optimization tips for every day
