@@ -67,15 +67,17 @@ class OpenRouterClient:
         user_prompt: str,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
+        model: Optional[str] = None,
     ) -> str:
         """
         Invoke LLM model via OpenRouter with the given prompts.
         Returns the model text output. Raises RuntimeError on any API issues.
         """
-        logger.debug(f"Invoking model via OpenRouter: {self.settings.openrouter_model}")
-        
+        resolved_model = model or self.settings.openrouter_model
+        logger.debug(f"Invoking model via OpenRouter: {resolved_model}")
+
         client = self._get_client()
-        
+
         # Build messages for chat completion
         messages = []
         if system_prompt:
@@ -90,14 +92,14 @@ class OpenRouterClient:
 
         try:
             logger.debug(
-                f"Sending request to OpenRouter: model={self.settings.openrouter_model}, "
+                f"Sending request to OpenRouter: model={resolved_model}, "
                 f"max_tokens={max_tokens or self.settings.max_tokens}"
             )
-            
+
             # Identity headers are set at client initialization (default_headers),
             # so they're automatically included in all requests.
             completion = client.chat.completions.create(
-                model=self.settings.openrouter_model,
+                model=resolved_model,
                 messages=messages,
                 max_tokens=max_tokens or self.settings.max_tokens,
                 temperature=temperature if temperature is not None else self.settings.temperature,

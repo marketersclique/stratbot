@@ -20,6 +20,7 @@ class Settings(BaseModel):
         default="openai/gpt-4o-mini",
         alias="OPENROUTER_MODEL",
     )
+    openrouter_calendar_model: Optional[str] = Field(default=None, alias="OPENROUTER_CALENDAR_MODEL")
     openrouter_site_url: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_URL")
     openrouter_site_name: Optional[str] = Field(default=None, alias="OPENROUTER_SITE_NAME")
     supabase_url: Optional[str] = Field(default=None, alias="SUPABASE_URL")
@@ -42,6 +43,7 @@ def get_settings() -> Settings:
     env_vars = {
         "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY"),
         "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
+        "OPENROUTER_CALENDAR_MODEL": os.getenv("OPENROUTER_CALENDAR_MODEL"),
         "OPENROUTER_SITE_URL": os.getenv("OPENROUTER_SITE_URL"),
         "OPENROUTER_SITE_NAME": os.getenv("OPENROUTER_SITE_NAME"),
         "SUPABASE_URL": os.getenv("SUPABASE_URL"),

@@ -236,12 +236,14 @@ Output instructions
 MANDATORY: The calendar must contain exactly {payload.duration_days} numbered days (Day 1 through Day {payload.duration_days}). Any response that skips or truncates days is considered incomplete and incorrect.
 """
             
-            logger.info(f"Generating calendar for {weeks} weeks across {platforms}")
+            calendar_model = self.settings.openrouter_calendar_model or self.settings.openrouter_model
+            logger.info(f"Generating calendar for {weeks} weeks across {platforms} using model: {calendar_model}")
             calendar_text = self.client.invoke_claude(
                 system_prompt=CALENDAR_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
                 max_tokens=self.settings.max_tokens,
                 temperature=self.settings.temperature,
+                model=calendar_model,
             )
             
             if not calendar_text or not isinstance(calendar_text, str):
